@@ -74,7 +74,7 @@ jobs:
             - name: Install dependencies with uv
               run: |
                   if [ -n "${{ inputs.extra-install-args }}" ]; then
-                    uv pip install --system -e "${{ inputs.extra-install-args }}"
+                  uv pip install --system -e "${{ inputs.extra-install-args }}"
                   fi
                   if [ -f requirements.txt ]; then uv pip install --system -r requirements.txt; fi
 
@@ -82,9 +82,9 @@ jobs:
               id: coverage_path
               run: |
                   if [ -n "${{ inputs.coverage-path }}" ]; then
-                    echo "path=${{ inputs.coverage-path }}" >> $GITHUB_OUTPUT
+                  echo "path=${{ inputs.coverage-path }}" >> $GITHUB_OUTPUT
                   else
-                    echo "path=src/${{ inputs.package-name }}" >> $GITHUB_OUTPUT
+                  echo "path=src/${{ inputs.package-name }}" >> $GITHUB_OUTPUT
                   fi
 
             # Run tests and generate coverage
@@ -104,7 +104,9 @@ jobs:
             # Update README with coverage badge
             - name: Update README with coverage badge HTML
               run: |
-                  sed -i '/<!-- Pytest Coverage Comment:Begin -->/,/<!-- Pytest Coverage Comment:End -->/c\<!-- Pytest Coverage Comment:Begin -->\n${{ steps.coverageComment.outputs.coverageHtml }}\n<!-- Pytest Coverage Comment:End -->' ./README.md
+                  PATTERN='/<!-- Pytest Coverage Comment:Begin -->/,/<!-- Pytest Coverage Comment:End -->/'
+                  REPLACEMENT='<!-- Pytest Coverage Comment:Begin -->\n${{ steps.coverageComment.outputs.coverageHtml }}\n<!-- Pytest Coverage Comment:End -->'
+                  sed -i "${PATTERN}c\\${REPLACEMENT}" ./README.md
 
             # Clean up temporary files
             - name: Clean up temporary coverage files

@@ -5,64 +5,64 @@ name: CI - Validate Workflows
 # we validate YAML syntax and workflow structure instead of running Python tests.
 
 on:
-    pull_request:
-        branches: ["main"]
+  pull_request:
+    branches: ["main"]
 
 permissions:
-    contents: read
+  contents: read
 
 jobs:
-    validate-yaml:
-        name: Validate YAML Syntax
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+  validate-yaml:
+    name: Validate YAML Syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-            - name: Validate YAML files
-              run: |
-                  # Install yamllint
-                  pip install yamllint
+      - name: Validate YAML files
+        run: |
+          # Install yamllint
+          pip install yamllint
 
-                  # Validate all YAML files
-                  yamllint .github/workflows/*.yml examples/*.yml
+          # Validate all YAML files
+          yamllint .github/workflows/*.yml examples/*.yml
 
-            - name: Check workflow file structure
-              run: |
-                  # Verify required workflow files exist
-                  test -f .github/workflows/reusable-ci.yml || { echo "Missing reusable-ci.yml"; exit 1; }
-                  test -f .github/workflows/reusable-cd.yml || { echo "Missing reusable-cd.yml"; exit 1; }
+      - name: Check workflow file structure
+        run: |
+          # Verify required workflow files exist
+          test -f .github/workflows/reusable-ci.yml || { echo "Missing reusable-ci.yml"; exit 1; }
+          test -f .github/workflows/reusable-cd.yml || { echo "Missing reusable-cd.yml"; exit 1; }
 
-                  # Verify example files exist
-                  test -f examples/caller-ci.yml || { echo "Missing examples/caller-ci.yml"; exit 1; }
-                  test -f examples/caller-cd.yml || { echo "Missing examples/caller-cd.yml"; exit 1; }
-                  test -f examples/.env.example || { echo "Missing examples/.env.example"; exit 1; }
+          # Verify example files exist
+          test -f examples/caller-ci.yml || { echo "Missing examples/caller-ci.yml"; exit 1; }
+          test -f examples/caller-cd.yml || { echo "Missing examples/caller-cd.yml"; exit 1; }
+          test -f examples/.env.example || { echo "Missing examples/.env.example"; exit 1; }
 
-                  echo "✅ All required files present"
+          echo "✅ All required files present"
 
-    validate-documentation:
-        name: Validate Documentation
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+  validate-documentation:
+    name: Validate Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-            - name: Check README structure
-              run: |
-                  # Verify README exists and has key sections
-                  test -f README.md || { echo "Missing README.md"; exit 1; }
+      - name: Check README structure
+        run: |
+          # Verify README exists and has key sections
+          test -f README.md || { echo "Missing README.md"; exit 1; }
 
-                  grep -q "Quick Start" README.md || { echo "README missing Quick Start section"; exit 1; }
-                  grep -q "Configuration Reference" README.md || { echo "README missing Configuration Reference"; exit 1; }
-                  grep -q "Usage Examples" README.md || { echo "README missing Usage Examples"; exit 1; }
-                  grep -q "Semantic Release" README.md || { echo "README missing Semantic Release section"; exit 1; }
-                  grep -q "Troubleshooting" README.md || { echo "README missing Troubleshooting section"; exit 1; }
+          grep -q "Quick Start" README.md || { echo "README missing Quick Start section"; exit 1; }
+          grep -q "Configuration Reference" README.md || { echo "README missing Configuration Reference"; exit 1; }
+          grep -q "Usage Examples" README.md || { echo "README missing Usage Examples"; exit 1; }
+          grep -q "Semantic Release" README.md || { echo "README missing Semantic Release section"; exit 1; }
+          grep -q "Troubleshooting" README.md || { echo "README missing Troubleshooting section"; exit 1; }
 
-                  echo "✅ README documentation complete"
+          echo "✅ README documentation complete"
 
-            - name: Check for broken internal links (examples)
-              run: |
-                  # Check that example references exist
-                  grep -q "examples/" README.md || echo "⚠️  README doesn't reference examples/"
+      - name: Check for broken internal links (examples)
+        run: |
+          # Check that example references exist
+          grep -q "examples/" README.md || echo "⚠️  README doesn't reference examples/"
 
-                  echo "✅ Documentation checks passed"
+          echo "✅ Documentation checks passed"
