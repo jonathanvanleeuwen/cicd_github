@@ -28,9 +28,10 @@ A centralized public repository of reusable GitHub Actions workflows that elimin
 ### CI Workflow (`reusable-ci.yml`)
 Validates code quality on every pull request:
 - ✅ Pre-commit hooks (ruff, trailing-whitespace, end-of-file-fixer, etc.)
-- ✅ Linting with ruff (modern) or flake8 (legacy)
+- ✅ Linting with ruff
 - ✅ Testing with pytest
-- ✅ Configurable Python version, package manager (pip/uv), and package structure (src/app)
+- ✅ Uses uv package manager for fast, reliable dependency installation
+- ✅ Optional steps via skip-* flags for flexibility
 
 ### CD Workflow (`reusable-cd.yml`)
 Automates releases when PRs are merged to main:
@@ -67,11 +68,10 @@ jobs:
     uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
     with:
       python-version: '3.12'
-      package-manager: 'pip'           # or 'uv'
-      linter: 'ruff'                   # or 'flake8'
-      package-structure: 'src'         # or 'app'
-      run-precommit: true
       extra-install-args: '.[dev]'
+      # Optional: skip-precommit: true
+      # Optional: skip-lint: true
+      # Optional: skip-tests: true
 ```
 
 **For CD (runs on merge):**
@@ -93,10 +93,12 @@ jobs:
     uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@main
     with:
       python-version: '3.12'
-      package-manager: 'pip'
-      package-structure: 'src'
       package-name: 'my_package_name'  # REQUIRED
       extra-install-args: '.[dev]'
+      # Optional: coverage-path: 'custom/path'
+      # Optional: skip-coverage: true
+      # Optional: skip-release: true
+      # Optional: skip-publish: true
     secrets:
       RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 ```
@@ -231,22 +233,22 @@ git push origin feature/my-new-feature
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
 | `python-version` | string | `'3.12'` | Python version to use |
-| `package-manager` | string | `'pip'` | Package manager: `'pip'` or `'uv'` |
-| `linter` | string | `'ruff'` | Linter: `'ruff'` or `'flake8'` |
-| `package-structure` | string | `'src'` | Package structure: `'src'` or `'app'` |
-| `run-precommit` | boolean | `true` | Whether to run pre-commit hooks |
-| `extra-install-args` | string | `'.[dev]'` | Extra install args (e.g., `'.[dev]'` or `''`) |
+| `extra-install-args` | string | `'.[dev]'` | Extra uv install args (e.g., `'.[dev]'` or `''`) |
+| `skip-precommit` | boolean | `false` | Skip pre-commit checks |
+| `skip-lint` | boolean | `false` | Skip linting with ruff |
+| `skip-tests` | boolean | `false` | Skip pytest tests |
 
 ### CD Workflow Inputs
 
 | Input | Type | Default | Description |
 |-------|------|---------|-------------|
 | `python-version` | string | `'3.12'` | Python version to use |
-| `package-manager` | string | `'pip'` | Package manager: `'pip'` or `'uv'` |
-| `package-structure` | string | `'src'` | Package structure: `'src'` or `'app'` |
 | `package-name` | string | **REQUIRED** | Name of package (for coverage and wheel) |
-| `extra-install-args` | string | `'.[dev]'` | Extra install args (e.g., `'.[dev]'` or `''`) |
-| `coverage-path` | string | `''` | Override coverage path (default: auto-detected) |
+| `extra-install-args` | string | `'.[dev]'` | Extra uv install args (e.g., `'.[dev]'` or `''`) |
+| `coverage-path` | string | `''` | Override coverage path (default: src/package-name) |
+| `skip-coverage` | boolean | `false` | Skip coverage report generation |
+| `skip-release` | boolean | `false` | Skip semantic release tagging |
+| `skip-publish` | boolean | `false` | Skip wheel build and publish |
 
 ### CD Workflow Secrets
 
@@ -258,106 +260,100 @@ git push origin feature/my-new-feature
 
 ## 🎨 Usage Examples
 
-### Example 1: Modern Python Library
+### Example 1: Standard Python Library
 
 ```yaml
 # .github/workflows/python-app.yml
 jobs:
   ci:
-    uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@v1.0.0
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@v1.0.0
     with:
       python-version: '3.12'
-      package-manager: 'pip'
-      linter: 'ruff'
-      package-structure: 'src'
-      run-precommit: true
       extra-install-args: '.[dev]'
 
 # .github/workflows/semantic-release.yml
 jobs:
   cd:
-    uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-cd.yml@v1.0.0
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@v1.0.0
     with:
       package-name: 'my_library'
       python-version: '3.12'
-      package-manager: 'pip'
-      package-structure: 'src'
+      extra-install-args: '.[dev]'
     secrets:
       RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 ```
 
-### Example 2: FastAPI Application with UV
+### Example 2: FastAPI Application
 
 ```yaml
 # .github/workflows/python-app.yml
 jobs:
   ci:
-    uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@main
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
     with:
       python-version: '3.12'
-      package-manager: 'uv'
-      linter: 'ruff'
-      package-structure: 'src'
-      run-precommit: true
       extra-install-args: '.[dev]'
 
 # .github/workflows/semantic-release.yml
 jobs:
   cd:
-    uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-cd.yml@main
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@main
     with:
       package-name: 'my_fastapi_app'
       python-version: '3.12'
-      package-manager: 'uv'
-      package-structure: 'src'
+      extra-install-args: '.[dev]'
     secrets:
       RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 ```
 
-### Example 3: Legacy Project (App Structure, Flake8)
+### Example 3: Custom Coverage Path
 
 ```yaml
 # .github/workflows/python-app.yml
 jobs:
   ci:
-    uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@main
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
     with:
       python-version: '3.12'
-      package-manager: 'pip'
-      linter: 'flake8'
-      package-structure: 'app'
-      run-precommit: false  # No pre-commit setup yet
-      extra-install-args: ''
+      extra-install-args: '.[dev]'
+      skip-precommit: true  # No pre-commit setup yet
 
 # .github/workflows/semantic-release.yml
 jobs:
   cd:
-    uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-cd.yml@main
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@main
     with:
-      package-name: 'legacy_project'
+      package-name: 'my_project'
       python-version: '3.12'
-      package-structure: 'app'
-      coverage-path: 'app/src/legacy_project'  # Custom coverage path
+      coverage-path: 'app/src/my_project'  # Custom coverage path
+      extra-install-args: '.[dev]'
     secrets:
       RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 ```
 
-### Example 4: Cookiecutter Template
-
-For cookiecutter templates, use Jinja2 template variables:
+### Example 4: Skipping Steps
 
 ```yaml
-# {{cookiecutter.project_name}}/.github/workflows/semantic-release.yml
+# .github/workflows/python-app.yml
+jobs:
+  ci:
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
+    with:
+      python-version: '3.12'
+      extra-install-args: '.[dev]'
+      skip-lint: true  # Skip ruff linting
+
+# .github/workflows/semantic-release.yml
 jobs:
   cd:
-    uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-cd.yml@main
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@main
     with:
-      package-name: '{{cookiecutter.project_name}}'
+      package-name: 'my_package'
       python-version: '3.12'
-      package-manager: 'pip'
-      package-structure: 'src'
+      skip-coverage: true  # Skip coverage report
+      skip-publish: true   # Skip wheel publishing
     secrets:
-      RELEASE_TOKEN: {% raw %}${{ secrets.RELEASE_TOKEN }}{% endraw %}
+      RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 ```
 
 ---
@@ -388,13 +384,13 @@ The PAT allows the workflow to bypass these rules while humans must use PRs.
 
 ```yaml
 # ✅ GOOD - Pinned to version tag (stable)
-uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@v1.2.0
+uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@v1.2.0
 
 # ⚠️ CAUTION - Uses main branch (auto-updates, may break)
-uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@main
+uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
 
 # ✅ ALSO GOOD - Uses commit SHA (immutable)
-uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@a1b2c3d
+uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@a1b2c3d
 ```
 
 For development/testing, `@main` is fine. For production, use versioned releases.
@@ -552,16 +548,9 @@ This project consolidates CI/CD patterns used across:
 - `fastapi_template` - FastAPI application template
 - `lib_template` - Python library template
 - `queue_worker_template` - Queue worker application template
-- `document_search`, `document_agent`, `document_frontend` - Production applications
 
 Built with ❤️ to eliminate repetitive workflow maintenance across multiple repositories.
 
----
-
-## 📞 Support
-
-- **Issues:** [GitHub Issues](https://github.com/YOUR_USERNAME/cicd_github/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/YOUR_USERNAME/cicd_github/discussions)
 
 ---
 

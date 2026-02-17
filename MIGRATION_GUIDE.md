@@ -44,21 +44,19 @@ Review your existing workflows and note:
 python-version: "3.12"  # or "3.11", etc.
 
 # What commands for installation?
-pip install -e ".[dev]"  # → package-manager: 'pip', extra-install-args: '.[dev]'
-uv pip install --system -e ".[dev]"  # package-manager: 'uv', extra-install-args: '.[dev]'
-
-# What linter?
-ruff check .  # → linter: 'ruff'
-flake8 .      # → linter: 'flake8'
-
-# Package structure?
-src/my_package/  # → package-structure: 'src'
-app/           # → package-structure: 'app'
+pip install -e ".[dev]"  # → extra-install-args: '.[dev]'
+uv pip install --system -e ".[dev]"  # Same: extra-install-args: '.[dev]'
 
 # Pre-commit?
-pre-commit run --all-files  # → run-precommit: true
-# (absent)                   # → run-precommit: false
+pre-commit run --all-files  # → skip-precommit: false (default)
+# (absent)                   # → skip-precommit: true
+
+# Package directory?
+src/my_package/  # → package-name: 'my_package'
+app/my_package/  # → package-name: 'my_package', coverage-path: 'app/my_package' (if needed)
 ```
+
+**Note:** Workflows now always use uv package manager and ruff linter.
 
 **From `semantic-release.yml` (CD workflow):**
 ```yaml
@@ -68,7 +66,7 @@ pre-commit run --all-files  # → run-precommit: true
 
 # What secret name for PAT?
 secrets.RELEASE_TOKEN  # ✅ Already correct
-secrets.SEM_RELEASE    # → Need to add RELEASE_TOKEN secret (or update cicd_github caller)
+secrets.SEM_RELEASE    # → Need to add RELEASE_TOKEN secret
 ```
 
 ### Step 3: Update or Add PAT Secret
@@ -116,12 +114,13 @@ jobs:
     uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
     with:
       python-version: '3.12'           # ← Your Python version
-      package-manager: 'pip'            # ← 'pip' or 'uv'
-      linter: 'ruff'                    # ← 'ruff' or 'flake8'
-      package-structure: 'src'          # ← 'src' or 'app'
-      run-precommit: true               # ← true or false
       extra-install-args: '.[dev]'      # ← Your install args
+      # Optional: skip-precommit: true
+      # Optional: skip-lint: true
+      # Optional: skip-tests: true
 ```
+
+**Note:** Workflows now always use uv package manager and ruff linter.
 
 **Commit:**
 ```bash
@@ -156,14 +155,17 @@ jobs:
     uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@main
     with:
       python-version: '3.12'           # ← Your Python version
-      package-manager: 'pip'            # ← 'pip' or 'uv'
-      package-structure: 'src'          # ← 'src' or 'app'
       package-name: 'YOUR_PACKAGE_NAME' # ← REQUIRED: Your package name
       extra-install-args: '.[dev]'      # ← Your install args
-      # coverage-path: 'custom/path'   # ← Uncomment if needed
+      # Optional: coverage-path: 'custom/path'
+      # Optional: skip-coverage: true
+      # Optional: skip-release: true
+      # Optional: skip-publish: true
     secrets:
       RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 ```
+
+**Note:** Workflows now always use uv package manager.
 
 **Commit:**
 ```bash
@@ -178,10 +180,11 @@ If status check names changed, update branch protection:
 1. Go to repository → Settings → Rules → Rulesets
 2. Click your "Protect main" ruleset
 3. Under "Require status checks to pass":
-   - Remove old check names if they're different
+   - Remove old check names if different
    - Add new check names:
-     - `Run Pre-commit Checks` (if `run-precommit: true`)
-     - `Run Tests and Lint`
+     - `pre-commit` (unless using `skip-precommit: true`)
+     - `lint` (unless using `skip-lint: true`)
+     - `test` (unless using `skip-tests: true`)
 4. Save changes
 
 ### Step 7: Test Migration
@@ -209,10 +212,10 @@ Once migration is validated, pin workflows to a specific version:
 
 ```yaml
 # Instead of @main
-uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@main
+uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
 
 # Use version tag
-uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@v1.0.0
+uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@v1.0.0
 ```
 
 This prevents unexpected breaking changes from cicd_github updates.
@@ -225,16 +228,19 @@ Quick reference for translating old workflow syntax to new inputs:
 
 | Old Workflow Feature | New Input Configuration |
 |---------------------|------------------------|
-| `pip install -e ".[dev]"` | `package-manager: 'pip'`<br>`extra-install-args: '.[dev]'` |
-| `uv pip install --system -e ".[dev]"` | `package-manager: 'uv'`<br>`extra-install-args: '.[dev]'` |
-| `ruff check .` | `linter: 'ruff'` |
-| `flake8 . --count...` | `linter: 'flake8'` |
-| `pre-commit run --all-files` | `run-precommit: true` |
-| `src/my_package/` structure | `package-structure: 'src'`<br>`package-name: 'my_package'` |
-| `app/` structure | `package-structure: 'app'`<br>`package-name: 'your_package'` |
+| `pip install -e ".[dev]"` | `extra-install-args: '.[dev]'` |
+| `uv pip install --system -e ".[dev]"` | `extra-install-args: '.[dev]'` |
+| `ruff check .` | Always used (default) |
+| `flake8 . --count...` | Not supported (use ruff) |
+| `pre-commit run --all-files` | Default (set `skip-precommit: true` to disable) |
+| `pytest` | Default (set `skip-tests: true` to disable) |
+| `src/my_package/` structure | `package-name: 'my_package'` |
+| `app/my_package/` structure | `package-name: 'my_package'`<br>`coverage-path: 'app/my_package'` (if needed) |
 | `--cov=src/my_package` | `package-name: 'my_package'` (auto-detected) |
 | `--cov=custom/path` | `coverage-path: 'custom/path'` |
 | `secrets.SEM_RELEASE` | Add `secrets.RELEASE_TOKEN` pointing to same PAT |
+
+**Important:** Workflows now always use uv package manager and ruff linter.
 
 ---
 
@@ -271,7 +277,8 @@ Quick reference for translating old workflow syntax to new inputs:
 
 **Solution:**
 - Check `package-name` matches your package directory name exactly
-- For custom paths, explicitly set `coverage-path` input
+- For non-standard layouts, explicitly set `coverage-path` input
+- Default coverage path is `src/{package-name}`
 - Verify path with: `find . -name "__init__.py" -path "*/my_package/*"`
 
 ### Different Python Version Needed
