@@ -1,216 +1,207 @@
 name: Reusable CD Workflow - Coverage, Versioning & Publishing
 
 on:
-    workflow_call:
-        inputs:
-            python-version:
-                description: "Python version to use"
-                required: false
-                type: string
-                default: "3.12"
-            package-name:
-                description:
-                    "Name of the package (for coverage path and wheel filename)"
-                required: true
-                type: string
-            extra-install-args:
-                description: 'Extra arguments for uv install (e.g., ".[dev]" or "")'
-                required: false
-                type: string
-                default: ".[dev]"
-            coverage-path:
-                description:
-                    "Path for coverage report (default: auto-detected as
-                    src/package-name)"
-                required: false
-                type: string
-                default: ""
-            skip-coverage:
-                description: "Skip coverage report generation"
-                required: false
-                type: boolean
-                default: false
-            skip-release:
-                description: "Skip semantic release tagging"
-                required: false
-                type: boolean
-                default: false
-            skip-publish:
-                description: "Skip wheel build and publish"
-                required: false
-                type: boolean
-                default: false
-        secrets:
-            RELEASE_TOKEN:
-                description:
-                    "Personal Access Token for pushing to protected main branch and
-                    creating releases"
-                required: true
+  workflow_call:
+    inputs:
+      python-version:
+        description: "Python version to use"
+        required: false
+        type: string
+        default: "3.12"
+      package-name:
+        description: "Name of the package (for coverage path and wheel filename)"
+        required: true
+        type: string
+      extra-install-args:
+        description: 'Extra arguments for uv install (e.g., ".[dev]" or "")'
+        required: false
+        type: string
+        default: ".[dev]"
+      coverage-path:
+        description: "Path for coverage report (default: auto-detected as src/package-name)"
+        required: false
+        type: string
+        default: ""
+      skip-coverage:
+        description: "Skip coverage report generation"
+        required: false
+        type: boolean
+        default: false
+      skip-release:
+        description: "Skip semantic release tagging"
+        required: false
+        type: boolean
+        default: false
+      skip-publish:
+        description: "Skip wheel build and publish"
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      RELEASE_TOKEN:
+        description: "Personal Access Token for pushing to protected main branch and creating releases"
+        required: true
 
 permissions:
-    contents: write
-    pull-requests: read
+  contents: write
+  pull-requests: read
 
 jobs:
-    coverage-report:
-        name: Generate and Update Coverage Report
-        if: ${{ github.event.pull_request.merged && !inputs.skip-coverage }}
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout repository with full history
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-                  token: ${{ secrets.RELEASE_TOKEN }}
+  coverage-report:
+    name: Generate and Update Coverage Report
+    if: ${{ github.event.pull_request.merged && !inputs.skip-coverage }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
 
-            - name: Set up Python ${{ inputs.python-version }}
-              uses: actions/setup-python@v5
-              with:
-                  python-version: ${{ inputs.python-version }}
+      - name: Set up Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
 
-            - name: Install uv
-              run: pip install uv
+      - name: Install uv
+        run: pip install uv
 
-            - name: Install dependencies with uv
-              run: |
-                  if [ -n "${{ inputs.extra-install-args }}" ]; then
-                    uv pip install --system -e "${{ inputs.extra-install-args }}"
-                  fi
-                  if [ -f requirements.txt ]; then uv pip install --system -r requirements.txt; fi
+      - name: Install dependencies with uv
+        run: |
+          if [ -n "${{ inputs.extra-install-args }}" ]; then
+          uv pip install --system -e "${{ inputs.extra-install-args }}"
+          fi
+          if [ -f requirements.txt ]; then uv pip install --system -r requirements.txt; fi
 
-            - name: Set coverage path
-              id: coverage_path
-              run: |
-                  if [ -n "${{ inputs.coverage-path }}" ]; then
-                    echo "path=${{ inputs.coverage-path }}" >> $GITHUB_OUTPUT
-                  else
-                    echo "path=src/${{ inputs.package-name }}" >> $GITHUB_OUTPUT
-                  fi
+      - name: Set coverage path
+        id: coverage_path
+        run: |
+          if [ -n "${{ inputs.coverage-path }}" ]; then
+          echo "path=${{ inputs.coverage-path }}" >> $GITHUB_OUTPUT
+          else
+          echo "path=src/${{ inputs.package-name }}" >> $GITHUB_OUTPUT
+          fi
 
-            # Run tests and generate coverage
-            - name: Run tests and generate coverage report
-              run: |
-                  pytest --junitxml=pytest.xml --cov=${{ steps.coverage_path.outputs.path }} --cov-report=term-missing --cov-report=xml:coverage.xml tests/ | tee pytest-coverage.txt
+        # Run tests and generate coverage
+      - name: Run tests and generate coverage report
+        run: |
+          pytest --junitxml=pytest.xml --cov=${{ steps.coverage_path.outputs.path }} --cov-report=term-missing --cov-report=xml:coverage.xml tests/ | tee pytest-coverage.txt
 
-            # Extract coverage for badge
-            - name: Extract coverage data for README badge
-              id: coverageComment
-              uses: MishaKav/pytest-coverage-comment@main
-              with:
-                  hide-comment: true
-                  pytest-coverage-path: ./pytest-coverage.txt
-                  junitxml-path: ./pytest.xml
+        # Extract coverage for badge
+      - name: Extract coverage data for README badge
+        id: coverageComment
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          hide-comment: true
+          pytest-coverage-path: ./pytest-coverage.txt
+          junitxml-path: ./pytest.xml
 
-            # Update README with coverage badge
-            - name: Update README with coverage badge HTML
-              run: |
-                  sed -i '/<!-- Pytest Coverage Comment:Begin -->/,/<!-- Pytest Coverage Comment:End -->/c\<!-- Pytest Coverage Comment:Begin -->\n${{ steps.coverageComment.outputs.coverageHtml }}\n<!-- Pytest Coverage Comment:End -->' ./README.md
+        # Update README with coverage badge
+      - name: Update README with coverage badge HTML
+        run: |
+          PATTERN='/<!-- Pytest Coverage Comment:Begin -->/,/<!-- Pytest Coverage Comment:End -->/'
+          REPLACEMENT='<!-- Pytest Coverage Comment:Begin -->\n${{ steps.coverageComment.outputs.coverageHtml }}\n<!-- Pytest Coverage Comment:End -->'
+          sed -i "${PATTERN}c\\${REPLACEMENT}" ./README.md
 
-            # Clean up temporary files
-            - name: Clean up temporary coverage files
-              run: rm ./pytest-coverage.txt ./pytest.xml ./coverage.xml
+        # Clean up temporary files
+      - name: Clean up temporary coverage files
+        run: rm ./pytest-coverage.txt ./pytest.xml ./coverage.xml
 
-            # Commit and push updated README
-            - name: Commit and push updated README with coverage
-              run: |
-                  git config --local user.email "github-actions[bot]@users.noreply.github.com"
-                  git config --local user.name "github-actions[bot]"
-                  git add README.md
-                  git diff --staged --quiet || git commit -m "docs: update coverage report in README [skip ci]"
-                  git push
+        # Commit and push updated README
+      - name: Commit and push updated README with coverage
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add README.md
+          git diff --staged --quiet || git commit -m "docs: update coverage report in README [skip ci]"
+          git push
 
-    semantic-release:
-        name: Create New Version Tag via Semantic Release
-        needs: coverage-report
-        if:
-            ${{ github.event.pull_request.merged && !failure() && !inputs.skip-release
-            }}
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout repository with full history
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-                  token: ${{ secrets.RELEASE_TOKEN }}
+  semantic-release:
+    name: Create New Version Tag via Semantic Release
+    needs: coverage-report
+    if: ${{ github.event.pull_request.merged && !failure() && !inputs.skip-release }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
 
-            - name: Pull latest changes from main
-              run: git pull
+      - name: Pull latest changes from main
+        run: git pull
 
-            - name: Set up Python ${{ inputs.python-version }}
-              uses: actions/setup-python@v5
-              with:
-                  python-version: ${{ inputs.python-version }}
+      - name: Set up Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
 
-            - name: Install uv
-              run: pip install uv
+      - name: Install uv
+        run: pip install uv
 
-            - name: Install python-semantic-release
-              run: uv pip install --system python-semantic-release
+      - name: Install python-semantic-release
+        run: uv pip install --system python-semantic-release
 
-            - name: Analyze commits and create version tag
-              run: |
-                  git config --local user.email "github-actions[bot]@users.noreply.github.com"
-                  git config --local user.name "github-actions[bot]"
-                  semantic-release version
-              env:
-                  GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+      - name: Analyze commits and create version tag
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          semantic-release version
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
-    build-and-publish:
-        name: Build Wheel and Publish to GitHub Release
-        needs: semantic-release
-        if:
-            ${{ github.event.pull_request.merged && !failure() && !inputs.skip-publish
-            }}
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout repository with full history
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-                  token: ${{ secrets.RELEASE_TOKEN }}
+  build-and-publish:
+    name: Build Wheel and Publish to GitHub Release
+    needs: semantic-release
+    if: ${{ github.event.pull_request.merged && !failure() && !inputs.skip-publish }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
 
-            - name: Pull latest changes (includes new version tag)
-              run: git pull origin main
+      - name: Pull latest changes (includes new version tag)
+        run: git pull origin main
 
-            - name: Set up Python ${{ inputs.python-version }}
-              uses: actions/setup-python@v5
-              with:
-                  python-version: ${{ inputs.python-version }}
+      - name: Set up Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
 
-            - name: Install uv
-              run: pip install uv
+      - name: Install uv
+        run: pip install uv
 
-            - name: Install Python build tools
-              run: uv pip install --system build
+      - name: Install Python build tools
+        run: uv pip install --system build
 
-            - name: Build wheel package
-              run: python -m build --wheel
+      - name: Build wheel package
+        run: python -m build --wheel
 
-            - name: Commit wheel to dist/ directory and push
-              run: |
-                  git config --local user.email "github-actions[bot]@users.noreply.github.com"
-                  git config --local user.name "github-actions[bot]"
-                  git add dist/*.whl
-                  git diff --staged --quiet || git commit -m "chore: update wheel to latest version [skip ci]"
-                  git push
+      - name: Commit wheel to dist/ directory and push
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add dist/*.whl
+          git diff --staged --quiet || git commit -m "chore: update wheel to latest version [skip ci]"
+          git push
 
-            - name: Get current version from git tag
-              id: get_version
-              run: |
-                  git fetch --tags
-                  LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-                  VERSION_NUM=${LATEST_TAG#v}
-                  echo "version=$LATEST_TAG" >> $GITHUB_OUTPUT
-                  echo "version_num=$VERSION_NUM" >> $GITHUB_OUTPUT
-                  echo "Latest tag: $LATEST_TAG, Version: $VERSION_NUM"
+      - name: Get current version from git tag
+        id: get_version
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          VERSION_NUM=${LATEST_TAG#v}
+          echo "version=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "version_num=$VERSION_NUM" >> $GITHUB_OUTPUT
+          echo "Latest tag: $LATEST_TAG, Version: $VERSION_NUM"
 
-            - name: Upload wheel as GitHub Release asset
-              uses: softprops/action-gh-release@v2
-              with:
-                  tag_name: ${{ steps.get_version.outputs.version }}
-                  files:
-                      dist/${{ inputs.package-name }}-${{
-                      steps.get_version.outputs.version_num }}-py3-none-any.whl
-                  fail_on_unmatched_files: true
-              env:
-                  GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+      - name: Upload wheel as GitHub Release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_version.outputs.version }}
+          files: dist/${{ inputs.package-name }}-${{ steps.get_version.outputs.version_num }}-py3-none-any.whl
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}

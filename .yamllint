@@ -9,10 +9,13 @@ rules:
     max: 200
     level: warning
 
-  # Indentation - GitHub Actions uses 2 spaces
+  # Indentation - GitHub Actions standard is 2 spaces
   indentation:
     spaces: 2
     indent-sequences: true
+
+  # New lines - Disable to allow mixed line endings (cross-platform)
+  new-lines: disable
 
   # Comments - Allow comments indentation
   comments:
