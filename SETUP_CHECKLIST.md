@@ -16,13 +16,14 @@ Use this checklist when setting up a new repository to use the cicd_github workf
 - [ ] Configure token:
   - [ ] Name: `RELEASE_TOKEN_YOUR_REPO_NAME`
   - [ ] Expiration: 90 days (set reminder to rotate)
-  - [ ] Repository access: Select your repository + cicd_github
+  - [ ] Repository access: Select your repository only
   - [ ] Permissions:
     - [ ] Contents: Read and write
-    - [ ] Workflows: Read
     - [ ] Metadata: Read-only (automatic)
 - [ ] Generate and copy token immediately
 - [ ] Store token securely (password manager)
+
+> **Note:** Since `cicd_github` is public, you don't need to grant your PAT access to it.
 
 ## Step 2: Add Token to Repository Secrets
 
@@ -38,7 +39,7 @@ Use this checklist when setting up a new repository to use the cicd_github workf
 
 - [ ] Create file: `.github/workflows/python-app.yml`
 - [ ] Copy content from [examples/caller-ci.yml](examples/caller-ci.yml)
-- [ ] Replace `YOUR_GITHUB_USERNAME` with your username
+- [ ] Verify it references `jonathanvanleeuwen/cicd_github`
 - [ ] Configure inputs:
   - [ ] `python-version`: Your Python version (e.g., `'3.12'`)
   - [ ] `package-manager`: `'pip'` or `'uv'`
@@ -52,7 +53,7 @@ Use this checklist when setting up a new repository to use the cicd_github workf
 
 - [ ] Create file: `.github/workflows/semantic-release.yml`
 - [ ] Copy content from [examples/caller-cd.yml](examples/caller-cd.yml)
-- [ ] Replace `YOUR_GITHUB_USERNAME` with your username
+- [ ] Verify it references `jonathanvanleeuwen/cicd_github`
 - [ ] Replace `YOUR_PACKAGE_NAME` with your package name
 - [ ] Configure inputs (same as CI workflow, plus):
   - [ ] `package-name`: Your package directory name (REQUIRED)

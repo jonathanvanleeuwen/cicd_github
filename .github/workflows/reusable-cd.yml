@@ -8,33 +8,38 @@ on:
                 required: false
                 type: string
                 default: "3.12"
-            package-manager:
-                description: "Package manager to use (pip or uv)"
-                required: false
-                type: string
-                default: "pip"
-            package-structure:
-                description: "Package structure (src or app)"
-                required: false
-                type: string
-                default: "src"
             package-name:
                 description:
                     "Name of the package (for coverage path and wheel filename)"
                 required: true
                 type: string
             extra-install-args:
-                description: 'Extra arguments for pip/uv install (e.g., ".[dev]" or "")'
+                description: 'Extra arguments for uv install (e.g., ".[dev]" or "")'
                 required: false
                 type: string
                 default: ".[dev]"
             coverage-path:
                 description:
-                    "Path for coverage report (default: auto-detected from
-                    package-structure/package-name)"
+                    "Path for coverage report (default: auto-detected as
+                    src/package-name)"
                 required: false
                 type: string
                 default: ""
+            skip-coverage:
+                description: "Skip coverage report generation"
+                required: false
+                type: boolean
+                default: false
+            skip-release:
+                description: "Skip semantic release tagging"
+                required: false
+                type: boolean
+                default: false
+            skip-publish:
+                description: "Skip wheel build and publish"
+                required: false
+                type: boolean
+                default: false
         secrets:
             RELEASE_TOKEN:
                 description:
@@ -49,7 +54,7 @@ permissions:
 jobs:
     coverage-report:
         name: Generate and Update Coverage Report
-        if: ${{ github.event.pull_request.merged }}
+        if: ${{ github.event.pull_request.merged && !inputs.skip-coverage }}
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository with full history
@@ -63,36 +68,23 @@ jobs:
               with:
                   python-version: ${{ inputs.python-version }}
 
-            # Install dependencies - pip
-            - name: Install dependencies (pip)
-              if: ${{ inputs.package-manager == 'pip' }}
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install pytest pytest-cov
-                  if [ -n "${{ inputs.extra-install-args }}" ]; then
-                    pip install -e "${{ inputs.extra-install-args }}"
-                  fi
-                  if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+            - name: Install uv
+              run: pip install uv
 
-            # Install dependencies - uv
-            - name: Install dependencies (uv)
-              if: ${{ inputs.package-manager == 'uv' }}
+            - name: Install dependencies with uv
               run: |
-                  python -m pip install --upgrade pip
-                  pip install uv
                   if [ -n "${{ inputs.extra-install-args }}" ]; then
                     uv pip install --system -e "${{ inputs.extra-install-args }}"
                   fi
                   if [ -f requirements.txt ]; then uv pip install --system -r requirements.txt; fi
 
-            # Determine coverage path
             - name: Set coverage path
               id: coverage_path
               run: |
                   if [ -n "${{ inputs.coverage-path }}" ]; then
                     echo "path=${{ inputs.coverage-path }}" >> $GITHUB_OUTPUT
                   else
-                    echo "path=${{ inputs.package-structure }}/${{ inputs.package-name }}" >> $GITHUB_OUTPUT
+                    echo "path=src/${{ inputs.package-name }}" >> $GITHUB_OUTPUT
                   fi
 
             # Run tests and generate coverage
@@ -130,7 +122,9 @@ jobs:
     semantic-release:
         name: Create New Version Tag via Semantic Release
         needs: coverage-report
-        if: ${{ github.event.pull_request.merged }}
+        if:
+            ${{ github.event.pull_request.merged && !failure() && !inputs.skip-release
+            }}
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository with full history
@@ -147,8 +141,11 @@ jobs:
               with:
                   python-version: ${{ inputs.python-version }}
 
+            - name: Install uv
+              run: pip install uv
+
             - name: Install python-semantic-release
-              run: pip install python-semantic-release
+              run: uv pip install --system python-semantic-release
 
             - name: Analyze commits and create version tag
               run: |
@@ -161,7 +158,9 @@ jobs:
     build-and-publish:
         name: Build Wheel and Publish to GitHub Release
         needs: semantic-release
-        if: ${{ github.event.pull_request.merged }}
+        if:
+            ${{ github.event.pull_request.merged && !failure() && !inputs.skip-publish
+            }}
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository with full history
@@ -178,10 +177,11 @@ jobs:
               with:
                   python-version: ${{ inputs.python-version }}
 
+            - name: Install uv
+              run: pip install uv
+
             - name: Install Python build tools
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install build
+              run: uv pip install --system build
 
             - name: Build wheel package
               run: python -m build --wheel

@@ -2,7 +2,7 @@
 
 **Reusable GitHub Actions workflows for Python projects - DRY CI/CD at scale**
 
-A centralized repository of reusable GitHub Actions workflows that eliminates duplicate CI/CD configuration across multiple Python projects. Update once, benefit everywhere.
+A centralized public repository of reusable GitHub Actions workflows that eliminates duplicate CI/CD configuration across multiple Python projects. Update once, benefit everywhere.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -64,7 +64,7 @@ permissions:
 
 jobs:
   ci:
-    uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@main
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
     with:
       python-version: '3.12'
       package-manager: 'pip'           # or 'uv'
@@ -90,7 +90,7 @@ permissions:
 
 jobs:
   cd:
-    uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-cd.yml@main
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@main
     with:
       python-version: '3.12'
       package-manager: 'pip'
@@ -101,11 +101,9 @@ jobs:
       RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 ```
 
-> **Important:** Replace `YOUR_GITHUB_USERNAME` with your actual GitHub username or organization name!
-
 ### Step 2: Configure Repository Secrets
 
-The CD workflow requires a Personal Access Token (PAT) to push commits and create releases.
+The CD workflow requires a Personal Access Token (PAT) to push commits, tags, and create releases.
 
 #### Create a Fine-Grained PAT
 
@@ -116,12 +114,12 @@ The CD workflow requires a Personal Access Token (PAT) to push commits and creat
    - **Expiration:** 90 days (recommended - set a reminder to rotate)
    - **Repository access:** "Only select repositories"
      - ✅ Select YOUR repository (the one using workflows)
-     - ✅ Select `cicd_github` repository (if private, to access workflows)
    - **Permissions:**
      - **Contents:** Read and write (push commits, tags, releases)
-     - **Workflows:** Read (access private workflow files)
      - **Metadata:** Read-only (automatically selected)
 4. Click **"Generate token"** and **COPY IT IMMEDIATELY** (you won't see it again!)
+
+> **Note:** Since this repository (`cicd_github`) is public, you don't need to grant your PAT access to it. The PAT only needs access to your own repository where you're using the workflows.
 
 #### Add Token to Repository
 
@@ -366,14 +364,6 @@ jobs:
 
 ## 🔒 Security & Best Practices
 
-### Private Repository Access
-
-If `cicd_github` is private, calling repositories need workflow access:
-
-1. **The PAT must include the `cicd_github` repository** in its repository access list
-2. **The PAT needs `Workflows: Read` permission** to access workflow files
-3. All calling repositories must use the same PAT (or different PATs with same access)
-
 ### Token Security
 
 - **Never commit tokens to git** - always use repository secrets
@@ -459,9 +449,9 @@ git commit -m "docs: fix typo in installation guide"
 **Problem:** Workflow can't access reusable workflow file.
 
 **Solution:**
-- Ensure your PAT includes the `cicd_github` repository in its access list
-- Verify the PAT has `Workflows: Read` permission
-- Check the workflow path is correct: `.github/workflows/reusable-ci.yml`
+- Check the workflow path is correct: `jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main`
+- Ensure you're referencing the correct branch or tag (e.g., `@main` or `@v1.0.0`)
+- Verify your repository has internet access (for self-hosted runners)
 
 ### CD Workflow Can't Push to Main
 

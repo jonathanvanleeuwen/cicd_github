@@ -92,17 +92,6 @@ If your existing workflow already uses `secrets.RELEASE_TOKEN`, no changes neede
 
 Follow [SETUP_CHECKLIST.md](SETUP_CHECKLIST.md) Step 1-2 to create and add the PAT.
 
-#### Option D: PAT Doesn't Include cicd_github Repository
-
-If your PAT exists but doesn't have access to cicd_github (private repo):
-
-1. Go to [GitHub Settings → Personal access tokens](https://github.com/settings/tokens)
-2. Find your existing PAT (e.g., `RELEASE_TOKEN_YOUR_REPO`)
-3. Click "Regenerate token"
-4. Update "Repository access" to include cicd_github
-5. Copy new token value
-6. Update secret in your repository with new value
-
 ### Step 4: Replace CI Workflow
 
 **Delete old file:**
@@ -124,7 +113,7 @@ permissions:
 
 jobs:
   ci:
-    uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@main
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
     with:
       python-version: '3.12'           # ← Your Python version
       package-manager: 'pip'            # ← 'pip' or 'uv'
@@ -164,7 +153,7 @@ permissions:
 
 jobs:
   cd:
-    uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-cd.yml@main
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@main
     with:
       python-version: '3.12'           # ← Your Python version
       package-manager: 'pip'            # ← 'pip' or 'uv'
@@ -256,10 +245,8 @@ Quick reference for translating old workflow syntax to new inputs:
 **Error:** `workflow was not found`
 
 **Solution:**
-- Check `YOUR_GITHUB_USERNAME` is correct
-- Verify PAT includes cicd_github repository access
-- Verify PAT has "Workflows: Read" permission
-- Check workflow path is exactly: `.github/workflows/reusable-ci.yml`
+- Verify workflow path is correct: `jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main`
+- Check you're using the correct branch or tag (`@main` or `@v1.0.0`)
 
 ### Status Checks Don't Appear
 

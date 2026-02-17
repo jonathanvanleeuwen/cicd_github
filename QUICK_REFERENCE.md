@@ -235,12 +235,12 @@ uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@a1b2c3d4e5f6
 **Type:** Personal Access Token (PAT)  
 **Permissions needed:**
 - Contents: Read and write
-- Workflows: Read (if cicd_github is private)
 - Metadata: Read-only (automatic)
 
 **Repository access:**
 - Your repository (the one using the workflows)
-- cicd_github repository (if private)
+
+> **Note:** Since `cicd_github` is public, the PAT doesn't need access to it.
 
 **Setup:**
 1. [Create PAT](https://github.com/settings/tokens?type=beta)
@@ -327,7 +327,7 @@ BREAKING CHANGE: removed v1 endpoints
 
 | Problem | Solution |
 |---------|----------|
-| Can't find workflow | Check PAT has Workflows: Read permission and includes cicd_github repo |
+| Can't find workflow | Verify workflow path: `jonathanvanleeuwen/cicd_github/.github/workflows/reusable-*.yml@main` |
 | Can't push to main | Check PAT has Contents: Read and write permission |
 | Coverage shows 0% | Verify `package-name` matches directory name exactly |
 | No version tag created | Use semantic commit messages (`fix:`, `feat:`) |

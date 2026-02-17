@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   cd:
-    uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-cd.yml@main
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@main
     with:
       python-version: "3.12" # Python version to use
       package-manager: "pip" # 'pip' or 'uv'
@@ -27,7 +27,7 @@ jobs:
       extra-install-args: ".[dev]" # Install args (e.g., '.[dev]' or '' for none)
       # coverage-path: ''              # Optional: Override coverage path detection
     secrets:
-      RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }} # PAT with repo/contents/workflow permissions
+      RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }} # PAT with repo/contents permissions
 
 # ============================================================================
 # CONFIGURATION EXAMPLES

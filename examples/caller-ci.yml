@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   ci:
-    uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@main
+    uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
     with:
       python-version: "3.12" # Python version to use
       package-manager: "pip" # 'pip' or 'uv'
