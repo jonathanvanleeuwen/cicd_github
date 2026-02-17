@@ -4,7 +4,7 @@ This guide helps you migrate existing repositories from local workflows to the c
 
 ## Overview
 
-**Before:** Each repository has its own `.github/workflows/` files with duplicated logic.  
+**Before:** Each repository has its own `.github/workflows/` files with duplicated logic.
 **After:** Each repository calls reusable workflows from cicd_github with configuration inputs.
 
 **Benefits:**
@@ -182,10 +182,12 @@ If status check names changed, update branch protection:
 3. Under "Require status checks to pass":
    - Remove old check names if different
    - Add new check names:
-     - `pre-commit` (unless using `skip-precommit: true`)
-     - `lint` (unless using `skip-lint: true`)
-     - `test` (unless using `skip-tests: true`)
+     - `ci / Run Pre-commit Checks` (unless using `skip-precommit: true`)
+     - `ci / Lint with Ruff` (unless using `skip-lint: true`)
+     - `ci / Run Tests with Pytest` (unless using `skip-tests: true`)
 4. Save changes
+
+> **Note:** Check names include the `ci /` prefix because they're called from the `ci` job.
 
 ### Step 7: Test Migration
 

@@ -107,6 +107,28 @@ Add these HTML comments to `README.md`:
 - [ ] Add coverage markers to README.md
 - [ ] Choose a good location (typically near top, after title)
 
+## Step 4: Run Pre-commit Locally Before First Push
+
+Prevent first-time CI failures by running pre-commit locally:
+
+```bash
+# Install pre-commit
+uv pip install --system pre-commit
+
+# Install git hooks
+pre-commit install
+
+# Run on all files
+pre-commit run --all-files
+```
+
+- [ ] Install pre-commit locally
+- [ ] Run `pre-commit run --all-files`
+- [ ] Fix any issues reported
+- [ ] Commit the fixes
+
+> **Why:** Pre-commit auto-fixes formatting (trailing whitespace, EOF newlines, ruff formatting). Running locally first prevents CI failures on your first PR.
+
 ## Step 5: Configure Branch Protection
 
 - [ ] Go to repository → Settings → Rules → Rulesets
@@ -123,9 +145,11 @@ Add these HTML comments to `README.md`:
       - [ ] Require conversation resolution
     - [ ] Require status checks to pass
       - [ ] Require branches up to date
-      - [ ] Add checks: `Run Pre-commit Checks`, `Run Tests and Lint`
+      - [ ] Add checks: `ci / Run Pre-commit Checks`, `ci / Lint with Ruff`, `ci / Run Tests with Pytest`
     - [ ] Block force pushes
 - [ ] Create ruleset
+
+> **Note:** You may need to run a PR first before these check names appear in the dropdown.
 
 ## Step 6: Test the Setup
 

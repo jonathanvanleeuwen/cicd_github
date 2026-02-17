@@ -183,7 +183,24 @@ name = "my_package"
 version = "0.1.0"  # semantic-release will auto-update this
 ```
 
-### Step 4: Protect Your Main Branch
+### Step 4: Run Pre-commit Locally (Important!)
+
+Before pushing your first PR, install and run pre-commit locally to avoid CI failures:
+
+```bash
+# Install pre-commit (if not already in your [dev] dependencies)
+uv pip install --system pre-commit
+
+# Install the git hooks
+pre-commit install
+
+# Run on all files to fix formatting issues
+pre-commit run --all-files
+```
+
+> **⚠️ Why this matters**: Pre-commit hooks will auto-fix formatting issues (trailing whitespace, end-of-file newlines, ruff formatting). Running this locally first ensures your initial PR passes CI. This is especially important for cookiecutter-generated projects where templates may have formatting issues.
+
+### Step 5: Protect Your Main Branch
 
 Configure branch protection to require PR reviews and status checks:
 
@@ -197,11 +214,16 @@ Configure branch protection to require PR reviews and status checks:
      - ✅ Restrict deletions
      - ✅ Require pull request before merging (1+ approvals)
      - ✅ Require status checks to pass
-       - Add checks: `Run Pre-commit Checks`, `Run Tests and Lint`
+       - Add checks:
+         - `ci / Run Pre-commit Checks`
+         - `ci / Lint with Ruff`
+         - `ci / Run Tests with Pytest`
      - ✅ Block force pushes
 4. Click **"Create"**
 
-### Step 5: Start Using It!
+> **Note:** Status checks appear as `ci / <Job Name>` because they run inside the reusable workflow called by the `ci` job. You may need to run a PR first before these checks appear in the dropdown.
+
+### Step 6: Start Using It!
 
 **Create a feature branch and make changes:**
 ```bash
