@@ -17,68 +17,61 @@ jobs:
     uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
     with:
       python-version: "3.12" # Python version to use
-      package-manager: "pip" # 'pip' or 'uv'
-      linter: "ruff" # 'ruff' or 'flake8'
-      package-structure: "src" # 'src' or 'app'
-      run-precommit: true # Whether to run pre-commit hooks
       extra-install-args: ".[dev]" # Install args (e.g., '.[dev]' or '' for none)
+      # Optional: skip-precommit: true  # Skip pre-commit checks
+      # Optional: skip-lint: true        # Skip ruff linting
+      # Optional: skip-tests: true       # Skip pytest tests
+# Note: Workflows always use uv package manager and ruff linter
 
 # ============================================================================
 # CONFIGURATION EXAMPLES
 # ============================================================================
 
-# Example 1: Modern FastAPI/Library Template (Default)
-#   Uses: ruff, pip, src/, pre-commit
+# Example 1: Standard Configuration (All Steps Enabled)
+#   Runs: pre-commit, ruff linting, pytest
 # jobs:
 #   ci:
-#     uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@main
+#     uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
 #     with:
 #       python-version: '3.12'
-#       package-manager: 'pip'
-#       linter: 'ruff'
-#       package-structure: 'src'
-#       run-precommit: true
 #       extra-install-args: '.[dev]'
 
-# Example 2: Legacy Project with UV and Flake8
-#   Uses: flake8, uv, app/, pre-commit
+# Example 2: Skip Pre-commit Checks
+#   Runs: ruff linting, pytest (no pre-commit)
 # jobs:
 #   ci:
-#     uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@main
+#     uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
 #     with:
 #       python-version: '3.12'
-#       package-manager: 'uv'
-#       linter: 'flake8'
-#       package-structure: 'app'
-#       run-precommit: true
 #       extra-install-args: '.[dev]'
+#       skip-precommit: true
 
-# Example 3: Simple Library (No Pre-commit)
-#   Uses: ruff, pip, src/, no pre-commit
+# Example 3: Skip Linting
+#   Runs: pre-commit, pytest (no ruff linting)
 # jobs:
 #   ci:
-#     uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@main
+#     uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
 #     with:
 #       python-version: '3.12'
-#       package-manager: 'pip'
-#       linter: 'ruff'
-#       package-structure: 'src'
-#       run-precommit: false
 #       extra-install-args: '.[dev]'
+#       skip-lint: true
 
-# Example 4: Minimal Setup (No Extra Dependencies)
-#   Uses: defaults with no extra install
+# Example 4: Minimal Setup (Only Tests)
+#   Runs: pytest only
 # jobs:
 #   ci:
-#     uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@main
+#     uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@main
 #     with:
-#       extra-install-args: ''  # No [dev] extras
+#       python-version: '3.12'
+#       extra-install-args: ''
+#       skip-precommit: true
+#       skip-lint: true
 
 # ============================================================================
 # VERSIONING
 # ============================================================================
 # To pin to a specific version instead of @main:
-# uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@v1.0.0
+# uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@v1.0.0
 #
 # To use a specific branch:
-# uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@develop
+# uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-ci.yml@develop

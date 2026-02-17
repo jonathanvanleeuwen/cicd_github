@@ -21,62 +21,60 @@ jobs:
     uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@main
     with:
       python-version: "3.12" # Python version to use
-      package-manager: "pip" # 'pip' or 'uv'
-      package-structure: "src" # 'src' or 'app'
       package-name: "YOUR_PACKAGE_NAME" # REQUIRED: Name of your package
       extra-install-args: ".[dev]" # Install args (e.g., '.[dev]' or '' for none)
-      # coverage-path: ''              # Optional: Override coverage path detection
+      # Optional: coverage-path: 'custom/path'  # Override coverage path
+      # Optional: skip-coverage: true           # Skip coverage report
+      # Optional: skip-release: true            # Skip semantic versioning
+      # Optional: skip-publish: true            # Skip wheel publishing
     secrets:
-      RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }} # PAT with repo/contents permissions
+      RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }} # PAT with Contents: Read/write
+
+# Note: Workflows always use uv package manager
 
 # ============================================================================
 # CONFIGURATION EXAMPLES
 # ============================================================================
 
-# Example 1: Modern FastAPI/Library Template with src/ structure
+# Example 1: Standard Library with src/ structure
 #   Package name: my_awesome_lib
 #   Coverage path: src/my_awesome_lib (auto-detected)
 # jobs:
 #   cd:
-#     uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-cd.yml@main
+#     uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@main
 #     with:
 #       python-version: '3.12'
-#       package-manager: 'pip'
-#       package-structure: 'src'
 #       package-name: 'my_awesome_lib'
 #       extra-install-args: '.[dev]'
 #     secrets:
 #       RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
-# Example 2: Legacy Project with app/ structure and UV
+# Example 2: Custom Coverage Path
 #   Package name: document_search
 #   Coverage path: app/src/document_search (custom)
 # jobs:
 #   cd:
-#     uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-cd.yml@main
+#     uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@main
 #     with:
 #       python-version: '3.12'
-#       package-manager: 'uv'
-#       package-structure: 'app'
 #       package-name: 'document_search'
 #       extra-install-args: '.[dev]'
 #       coverage-path: 'app/src/document_search'  # Custom path
 #     secrets:
 #       RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
-# Example 3: Cookiecutter Template Usage
-#   Use Jinja2 template variables for dynamic package name
+# Example 3: Skip Specific Steps
+#   Runs semantic release only (no coverage, no publish)
 # jobs:
 #   cd:
-#     uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-cd.yml@main
+#     uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@main
 #     with:
 #       python-version: '3.12'
-#       package-manager: 'pip'
-#       package-structure: 'src'
-#       package-name: '{{cookiecutter.project_name}}'  # Cookiecutter variable
-#       extra-install-args: '.[dev]'
+#       package-name: 'my_package'
+#       skip-coverage: true   # Skip coverage report
+#       skip-publish: true    # Skip wheel publishing
 #     secrets:
-#       RELEASE_TOKEN: {% raw %}${{ secrets.RELEASE_TOKEN }}{% endraw %}
+#       RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
 
 # ============================================================================
 # REQUIRED SETUP
@@ -85,11 +83,11 @@ jobs:
 # 1. Create a Personal Access Token (PAT):
 #    - Go to: https://github.com/settings/tokens?type=beta
 #    - Create a fine-grained token with these permissions:
-#      * Repository access: Select your repositories
+#      * Repository access: Select your repository
 #      * Permissions:
 #        - Contents: Read and write
-#        - Workflows: Read and write (for accessing private cicd_github repo)
 #        - Metadata: Read-only (automatic)
+#    - Note: Since cicd_github is public, you don't need Workflows: Read
 #
 # 2. Add the token as a repository secret:
 #    - Go to your repo → Settings → Secrets and variables → Actions
@@ -122,7 +120,7 @@ jobs:
 # VERSIONING
 # ============================================================================
 # To pin to a specific version instead of @main:
-# uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-cd.yml@v1.0.0
+# uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@v1.0.0
 #
 # To use a specific branch:
-# uses: YOUR_GITHUB_USERNAME/cicd_github/.github/workflows/reusable-cd.yml@develop
+# uses: jonathanvanleeuwen/cicd_github/.github/workflows/reusable-cd.yml@develop

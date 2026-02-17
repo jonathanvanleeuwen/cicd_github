@@ -42,12 +42,13 @@ Use this checklist when setting up a new repository to use the cicd_github workf
 - [ ] Verify it references `jonathanvanleeuwen/cicd_github`
 - [ ] Configure inputs:
   - [ ] `python-version`: Your Python version (e.g., `'3.12'`)
-  - [ ] `package-manager`: `'pip'` or `'uv'`
-  - [ ] `linter`: `'ruff'` or `'flake8'`
-  - [ ] `package-structure`: `'src'` or `'app'`
-  - [ ] `run-precommit`: `true` or `false`
   - [ ] `extra-install-args`: `'.[dev]'` or `''`
+  - [ ] Optional: `skip-precommit: true` to skip pre-commit checks
+  - [ ] Optional: `skip-lint: true` to skip ruff linting
+  - [ ] Optional: `skip-tests: true` to skip pytest
 - [ ] Commit and push
+
+**Note:** Workflows always use uv package manager and ruff linter.
 
 ### CD Workflow
 
@@ -55,10 +56,17 @@ Use this checklist when setting up a new repository to use the cicd_github workf
 - [ ] Copy content from [examples/caller-cd.yml](examples/caller-cd.yml)
 - [ ] Verify it references `jonathanvanleeuwen/cicd_github`
 - [ ] Replace `YOUR_PACKAGE_NAME` with your package name
-- [ ] Configure inputs (same as CI workflow, plus):
+- [ ] Configure inputs:
+  - [ ] `python-version`: Your Python version (e.g., `'3.12'`)
   - [ ] `package-name`: Your package directory name (REQUIRED)
-  - [ ] `coverage-path`: Custom path if needed (optional)
+  - [ ] `extra-install-args`: `'.[dev]'` or `''`
+  - [ ] Optional: `coverage-path`: Custom path if needed
+  - [ ] Optional: `skip-coverage: true` to skip coverage report
+  - [ ] Optional: `skip-release: true` to skip versioning
+  - [ ] Optional: `skip-publish: true` to skip wheel publishing
 - [ ] Commit and push
+
+**Note:** Workflows always use uv package manager.
 
 ## Step 4: Configure Project for Semantic Release
 
