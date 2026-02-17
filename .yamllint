@@ -9,9 +9,9 @@ rules:
     max: 200
     level: warning
 
-  # Indentation - GitHub Actions uses 2 spaces
+  # Indentation - Using 4 spaces for consistency with project style
   indentation:
-    spaces: 2
+    spaces: 4
     indent-sequences: true
 
   # Comments - Allow comments indentation
