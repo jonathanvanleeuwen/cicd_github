@@ -1,0 +1,37 @@
+---
+# YAML Lint Configuration for GitHub Actions Workflows
+
+extends: default
+
+rules:
+  # Line length - GitHub Actions workflows can be long
+  line-length:
+    max: 200
+    level: warning
+
+  # Indentation - GitHub Actions uses 2 spaces
+  indentation:
+    spaces: 2
+    indent-sequences: true
+
+  # Comments - Allow comments indentation
+  comments:
+    min-spaces-from-content: 1
+
+  # Truthy values - GitHub Actions uses yes/no, on/off
+  truthy:
+    allowed-values: ["true", "false", "yes", "no", "on", "off"]
+    check-keys: false
+
+  # Document start - Not required
+  document-start: disable
+
+  # Brackets - Allow various styles
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+
+  # Empty values - Allow for GitHub Actions
+  empty-values:
+    forbid-in-block-mappings: false
+    forbid-in-flow-mappings: false

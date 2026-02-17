@@ -1,0 +1,109 @@
+name: CD - Release Workflows
+
+# This workflow creates semantic releases for the cicd_github repository.
+# While there's no Python package to build, versioning workflows allows
+# other repositories to pin to specific workflow versions.
+
+on:
+    pull_request:
+        branches:
+            - main
+        types: [closed]
+
+permissions:
+    contents: write
+    pull-requests: read
+
+jobs:
+    semantic-release:
+        name: Create Version Tag
+        if: ${{ github.event.pull_request.merged }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository with full history
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+                  token: ${{ secrets.RELEASE_TOKEN }}
+
+            - name: Pull latest changes from main
+              run: git pull
+
+            - name: Set up Python 3.12
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.12"
+
+            - name: Install python-semantic-release
+              run: pip install python-semantic-release
+
+            - name: Configure git
+              run: |
+                  git config --local user.email "github-actions[bot]@users.noreply.github.com"
+                  git config --local user.name "github-actions[bot]"
+
+            - name: Create version tag
+              run: semantic-release version
+              env:
+                  GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
+    create-release:
+        name: Create GitHub Release
+        needs: semantic-release
+        if: ${{ github.event.pull_request.merged }}
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout repository with full history
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+                  token: ${{ secrets.RELEASE_TOKEN }}
+
+            - name: Pull latest changes (includes new version tag)
+              run: git pull origin main
+
+            - name: Get current version from git tag
+              id: get_version
+              run: |
+                  git fetch --tags
+                  LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0")
+                  echo "version=$LATEST_TAG" >> $GITHUB_OUTPUT
+                  echo "Latest tag: $LATEST_TAG"
+
+            - name: Create GitHub Release with workflow files
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ steps.get_version.outputs.version }}
+                  name: Release ${{ steps.get_version.outputs.version }}
+                  body: |
+                      ## Reusable GitHub Actions Workflows
+
+                      This release contains versioned CI/CD workflows for Python projects.
+
+                      ### Usage
+                      Reference these workflows in your repositories:
+
+                      ```yaml
+                      # CI Workflow
+                      jobs:
+                        ci:
+                          uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-ci.yml@${{ steps.get_version.outputs.version }}
+
+                      # CD Workflow
+                      jobs:
+                        cd:
+                          uses: YOUR_USERNAME/cicd_github/.github/workflows/reusable-cd.yml@${{ steps.get_version.outputs.version }}
+                      ```
+
+                      ### What's Changed
+                      See commit history for detailed changes.
+
+                      ### Documentation
+                      Full documentation: https://github.com/${{ github.repository }}/blob/${{ steps.get_version.outputs.version }}/README.md
+                  files: |
+                      .github/workflows/reusable-ci.yml
+                      .github/workflows/reusable-cd.yml
+                      examples/*
+                  fail_on_unmatched_files: false
+              env:
+                  GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
